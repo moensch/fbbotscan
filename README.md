@@ -1,5 +1,3 @@
-cmd/fb-classifier/fb-classifier
-cmd/fb-classifier/fb-classifier
 [![GoDoc](https://godoc.org/github.com/moensch/fbbotscan?status.svg)](https://godoc.org/github.com/moensch/fbbotscan)
 
 # fbbotscan
