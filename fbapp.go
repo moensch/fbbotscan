@@ -5,31 +5,42 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	fb "github.com/huandu/facebook"
+	"github.com/moensch/fbbotscan/config"
 )
 
 type FBApp struct {
-	AppID     string
-	AppSecret string
-	AppToken  string
-	App       *fb.App
-	Session   *fb.Session
+	AppToken   string
+	App        *fb.App
+	Session    *fb.Session
+	ConfigPath string
+	Config     *config.Config
 }
 
-func New(appId string, appSecret string) *FBApp {
+func New(configPath string) *FBApp {
 	fbapp := &FBApp{
-		AppID:     appId,
-		AppSecret: appSecret,
+		ConfigPath: configPath,
 	}
-	fbapp.Initialize()
+	if err := fbapp.Initialize(); err != nil {
+		log.Fatalf("Failed to initialize: %s", err)
+	}
 
 	return fbapp
 }
 
+func (a *FBApp) LoadConfig() error {
+	var err error
+	a.Config, err = config.LoadFile(a.ConfigPath)
+	return err
+}
+
 func (a *FBApp) Initialize() error {
 	var err error
-	log.Infof("Application ID: %s", a.AppID)
-	log.Infof("Application Secret: %s", a.AppSecret)
-	a.App = fb.New(a.AppID, a.AppSecret)
+	if err := a.LoadConfig(); err != nil {
+		return err
+	}
+	log.Infof("Application ID: %s", a.Config.FB.AppID)
+	log.Infof("Application Secret: %s", a.Config.FB.AppSecret)
+	a.App = fb.New(a.Config.FB.AppID, a.Config.FB.AppSecret)
 	a.AppToken = a.App.AppAccessToken()
 	log.Infof("Application Token: %s", a.AppToken)
 
@@ -44,7 +55,8 @@ func (a *FBApp) LoadFeed(pageId string, maxEntries int, since int64) ([]FBPost, 
 
 	var posts = make([]FBPost, 0)
 
-	res, err := a.Session.Get(fmt.Sprintf("/%s/feed", pageId), fb.Params{"limit": "4"})
+	log.Infof("Loading feed for %s since %d", pageId, since)
+	res, err := a.Session.Get(fmt.Sprintf("/%s/feed", pageId), fb.Params{"limit": "4", "fields": "id,created_time,permalink_url,link,message,story", "since": since})
 	if err != nil {
 		return posts, err
 	}
@@ -56,6 +68,7 @@ func (a *FBApp) LoadFeed(pageId string, maxEntries int, since int64) ([]FBPost, 
 
 	totalPosts := 0
 	for ok := true; ok; ok = p.HasNext() {
+		log.Debugf("  Loading next page for %s", pageId)
 		for _, res := range p.Data() {
 			var post FBPost
 			err = res.Decode(&post)
@@ -85,7 +98,8 @@ func (a *FBApp) LoadComments(objectId string, since int64) ([]FBComment, error) 
 
 	var comments = make([]FBComment, 0)
 
-	res, err := a.Session.Get(fmt.Sprintf("/%s/comments", objectId), fb.Params{"limit": "20", "order": "chronological"})
+	log.Infof("Loading comments for %s since %d", objectId, since)
+	res, err := a.Session.Get(fmt.Sprintf("/%s/comments", objectId), fb.Params{"limit": "20", "order": "chronological", "fields": "id,created_time,from,message,parent,comment_count,like_count,permalink_url", "since": since})
 	if err != nil {
 		return comments, err
 	}
@@ -97,6 +111,7 @@ func (a *FBApp) LoadComments(objectId string, since int64) ([]FBComment, error) 
 
 	totalPosts := 0
 	for ok := true; ok; ok = p.HasNext() {
+		log.Debugf("  Loading next page for %s", objectId)
 		for _, res := range p.Data() {
 			var comment FBComment
 			err = res.Decode(&comment)

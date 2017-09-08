@@ -1,0 +1,19 @@
+[fb]
+app_id = ""
+app_secret = ""
+feed_check_seconds = 300
+comments_check_seconds = 60
+
+[amqp]
+uri = "amqp://guest:guest@localhost:5672/"
+
+[db]
+type = "postgres"
+connstr = "user=postgres password=postgres dbname=fbpipeline host=localhost port=5432 sslmode=disable"
+
+[es]
+url = "http://127.0.0.1:9200"
+
+[classify]
+discard_score = 10.0
+match_score = 20.0
