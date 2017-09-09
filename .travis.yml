@@ -1,7 +1,12 @@
 language: go
 go:
-  - 1.6
+  - 1.7
 install:
+  - go get github.com/streadway/amqp
+  - go get gopkg.in/olivere/elastic.v5
+  - go get github.com/BurntSushi/toml
+  - go get github.com/Sirupsen/logrus
+  - go get github.com/huandu/facebook
   - ./build static
   - sudo ./install
 script:
