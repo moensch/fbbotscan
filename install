@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+BIN_DIR=${BIN_DIR:-/usr/local/bin}
+INSTALL=install
+
+COMMANDS="
+	fb-classifier
+	fb-scheduler
+	fb-fetcher
+	fb-storer
+"
+
+for cmd in $COMMANDS
+do
+  echo "Installing $cmd to $BIN_DIR/$cmd"
+  $INSTALL -c bin/$cmd $BIN_DIR/$cmd
+done

@@ -1,0 +1,25 @@
+#!/bin/bash
+set -x
+set -e
+
+COMMANDS="
+	fb-classifier
+	fb-scheduler
+	fb-fetcher
+	fb-storer
+"
+
+mkdir -p ./bin
+go get
+for cmd in $COMMANDS
+do
+  go build -o ./bin/$cmd ./cmd/$cmd
+done
+
+if [[ -n "$1" && "$1" == "static" ]]; then
+  echo "Building static binary..."
+  for cmd in $COMMANDS
+  do
+    CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -a -o ./bin/$cmd-static -installsuffix cgo ./cmd/$cmd
+  done
+fi
