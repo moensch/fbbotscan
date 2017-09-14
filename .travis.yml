@@ -2,12 +2,8 @@ language: go
 go:
   - 1.7
 install:
-  - go get github.com/streadway/amqp
-  - go get gopkg.in/olivere/elastic.v5
-  - go get github.com/BurntSushi/toml
-  - go get github.com/Sirupsen/logrus
-  - go get github.com/huandu/facebook
-  - go get github.com/lib/pq
+# Install external dependencies
+  - go get -u -v $(go list -f '{{join .Imports "\n"}}{{"\n"}}{{join .TestImports "\n"}}' ./... | sort | uniq)
   - ./build static
   - sudo ./install
 script:
